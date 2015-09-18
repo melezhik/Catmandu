@@ -78,6 +78,8 @@ use Moo;
 
 with 'Catmandu::Logger';
 
+my $FIX_CB;
+
 my $GRAMMAR = <<'GRAMMAR';
 :default ::= action => ::array
 :start ::= fixes
@@ -173,7 +175,7 @@ sub parse {
         source => \$GRAMMAR,
     });
 
-    my ($self, $source) = @_;
+    my ($self, $source, %opts) = @_;
 
     check_value($source);
 
@@ -186,6 +188,7 @@ sub parse {
 
         $self->log->debugf(Dumper($val)) if $self->log->is_debug;
 
+        local $FIX_CB = $opts{fix_cb} if $opts{fix_cb};
         [map {$_->reify} @$val];
     } catch {
        if (is_instance($_, 'Catmandu::Error')) {
@@ -253,23 +256,29 @@ sub Catmandu::Fix::Parser::Reject::reify {
 sub Catmandu::Fix::Parser::Fix::reify {
     my $name = $_[0]->[0];
     my $args = $_[0]->[1];
-    Catmandu::Fix::Parser::_build_fix($name, 'Catmandu::Fix',
-        map { $_->reify } @$args);
+    my @build_args = ($name, 'Catmandu::Fix', map { $_->reify } @$args);
+    my $fix;
+    $fix = $FIX_CB->(@build_args) if $FIX_CB;
+    $fix || Catmandu::Fix::Parser::_build_fix(@build_args);
 }
 
 sub Catmandu::Fix::Parser::Condition::reify {
     my $name = $_[0]->[0];
     my $args = $_[0]->[1];
-    Catmandu::Fix::Parser::_build_fix($name, 'Catmandu::Fix::Condition',
-        map { $_->reify } @$args);
+    my @build_args = ($name, 'Catmandu::Fix::Condition', map { $_->reify } @$args);
+    my $fix;
+    $fix = $FIX_CB->(@build_args) if $FIX_CB;
+    $fix || Catmandu::Fix::Parser::_build_fix(@build_args);
 }
 
 sub Catmandu::Fix::Parser::OldCondition::reify {
     my $name = $_[0]->[0];
     my $args = $_[0]->[1];
     $name =~ s/^(?:if|unless)_//;
-    Catmandu::Fix::Parser::_build_fix($name, 'Catmandu::Fix::Condition',
-        map { $_->reify } @$args);
+    my @build_args = ($name, 'Catmandu::Fix::Condition', map { $_->reify } @$args);
+    my $fix;
+    $fix = $FIX_CB->(@build_args) if $FIX_CB;
+    $fix || Catmandu::Fix::Parser::_build_fix(@build_args);
 }
 
 sub Catmandu::Fix::Parser::DoSet::reify {
@@ -291,8 +300,10 @@ sub Catmandu::Fix::Parser::Do::reify {
 sub Catmandu::Fix::Parser::Bind::reify {
     my $name = $_[0]->[0];
     my $args = $_[0]->[1];
-    Catmandu::Fix::Parser::_build_fix($name, 'Catmandu::Fix::Bind',
-        map { $_->reify } @$args);
+    my @build_args = ($name, 'Catmandu::Fix::Bind', map { $_->reify } @$args);
+    my $fix;
+    $fix = $FIX_CB->(@build_args) if $FIX_CB;
+    $fix || Catmandu::Fix::Parser::_build_fix(@build_args);
 }
 
 sub Catmandu::Fix::Parser::DoubleQuotedString::reify {
