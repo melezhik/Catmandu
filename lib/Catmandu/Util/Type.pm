@@ -80,7 +80,9 @@ sub is_invocant {
 
 *is_scalar_ref = \&Ref::Util::is_plain_scalarref;
 
-*is_array_ref = \&Ref::Util::is_plain_arrayref;
+sub is_array_ref {
+    Ref::Util::is_plain_arrayref($_[0]);
+}
 
 *is_hash_ref = \&Ref::Util::is_plain_hashref;
 
