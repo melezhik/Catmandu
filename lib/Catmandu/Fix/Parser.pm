@@ -1,3 +1,20 @@
+package Catmandu::Fix::PathParser;
+
+use Catmandu::Sane;
+
+use Moo;
+use namespace::clean;
+
+extends 'Parser::MGC';
+
+sub FOREIGNBUILDARGS {
+    my ($class, $opts) = @_;
+    $opts->{toplevel} = 'parse_path';
+    $opts->{patterns} = {ws => /\./};
+    %$opts;
+}
+
+
 package Catmandu::Fix::Parser;
 
 use Catmandu::Sane;
@@ -130,8 +147,33 @@ sub parse_arguments {
 
 sub parse_value {
     my ($self) = @_;
-    $self->any_of('parse_double_quoted_string', 'parse_single_quoted_string',
+    $self->any_of('parse_path', 'parse_double_quoted_string', 'parse_single_quoted_string',
         'parse_bare_string',);
+}
+
+sub parse_path {
+    my ($self) = @_;
+    my $segments = $self->list_of(qr/\./, 'parse_path_segment');
+    join('.', @$segments);
+}
+
+sub parse_path_segment {
+    my ($self) = @_;
+    $self->any_of('parse_path_expr_with_args', 'parse_path_expr', 'parse_bare_string');
+}
+
+sub parse_path_expr_with_args {
+    my ($self) = @_;
+    my $expr = $self->token_kw(qw($before $after));
+    $self->expect('(');
+    my $val = $self->parse_value;
+    $self->expect(')');
+    "$expr($val)";
+}
+
+sub parse_path_expr {
+    my ($self) = @_;
+    $self->token_kw(qw($first $last $prepend $append));
 }
 
 sub parse_bare_string {
