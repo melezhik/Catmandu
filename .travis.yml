@@ -15,6 +15,7 @@ install:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover
 script:
   - perl Build.PL && ./Build build && cover -test
+  - sparrow plg install catmandu-smoke
   - sparrow plg run catmandu-smoke
 after_success:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
