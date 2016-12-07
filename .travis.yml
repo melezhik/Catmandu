@@ -16,7 +16,7 @@ install:
   - sparrow plg install catmandu-smoke
 script:
   - perl Build.PL && ./Build build && cover -test
-  - "export PATH=$PWD/bin && export PERL5LIB=$PWD/lib && sparrow plg run catmandu-smoke"
+  - "export PATH=$PWD/bin:$PATH && export PERL5LIB=$PWD/lib:$PERL5LIB && sparrow plg run catmandu-smoke"
 after_success:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
   - cover -report coveralls
