@@ -13,10 +13,10 @@ install:
   - cpanm --quiet --notest Sparrow
   - cpanm --quiet --installdeps --notest --force --skip-satisfied .
   - cpanm --quiet --notest --skip-satisfied Devel::Cover
+  - sparrow plg install catmandu-smoke
 script:
   - perl Build.PL && ./Build build && cover -test
-  - sparrow plg install catmandu-smoke
-  - sparrow plg run catmandu-smoke
+  - "export PATH=$PWD/bin && export PERL5LIB=$PWD/lib && sparrow plg run catmandu-smoke"
 after_success:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
   - cover -report coveralls
