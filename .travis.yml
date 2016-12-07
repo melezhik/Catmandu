@@ -10,10 +10,12 @@ before_install:
   - cpanm --notest Perl::Tidy
   - cpanm --notest Test::Code::TidyAll 
 install: 
+  - cpanm --quiet --notest Sparrow
   - cpanm --quiet --installdeps --notest --force --skip-satisfied .
   - cpanm --quiet --notest --skip-satisfied Devel::Cover
 script:
   - perl Build.PL && ./Build build && cover -test
+  - sparrow plg run catmandu-smoke
 after_success:
   - cpanm --quiet --notest --skip-satisfied Devel::Cover::Report::Coveralls
   - cover -report coveralls
